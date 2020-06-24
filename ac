@@ -1,0 +1,14 @@
+t = 3
+        mask_v = np.zeros(shape=(112,112),dtype=np.int32)
+        mask_v[0:t,:]=1
+        mask_v[:,0:t]=1
+        mask_v[np.arange(113-t,112),:]=1
+        mask_v[:,np.arange(113-t,112)]=1
+        mask = tf.constant(mask_v, tf.int32)
+        #print(mask)
+        #print(np.arange(113-t,112))
+        
+        bc = tf.complex(image, tf.zeros_like(image))
+        bcf = tf.signal.fft2d(bc)
+        bcf = tf.where(mask==1,bcf,tf.zeros_like(bcf))
+        ibcf = tf.signal.ifft2d(bcf)
