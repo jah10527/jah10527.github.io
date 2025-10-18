@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+ 
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>album</title>
+ <link rel="stylesheet" href="https://cdn.jsdmirror.com/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+ <link rel="stylesheet" href="css/style.css">
+ <link rel="stylesheet" href="css/lightbox.css">
+ <script type="text/javascript" src="js/lightbox-plus-jquery.js"></script>
+ <script type="text/javascript" src="https://cdn.jsdmirror.com/npm/@zip.js/zip.js/dist/zip.min.js"></script>
+</head>
+<body>
+<h2 id="title_h2" class="bg-info text-center text-warning"></h2>
+<div class="text-center">每页显示30张，第
+    <select id="page" size="1">
+	</select>页<br>(如不显示，请刷新再试)
+</div>
+<div class="progress">
+  <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+</div>
+<div class="gallary"></div>
+<script>
+var page = sessionStorage.getItem('page');
+//console.log('pre page:', page);
+if (page==null){
+ page = 0;
+}
+let chunkSize = 30;
+loadPage(chunkSize, page, true);
+
+const selectElement = document.getElementById('page');
+selectElement.addEventListener('change', function() {
+  var progress = 0;
+  const progressBar = document.querySelector('.progress-bar');
+  progressBar.style.width = `${progress}%`;
+  progressBar.setAttribute('aria-valuenow', progress);
+  progressBar.textContent = `${progress}%`;
+  const page = this.value;
+  //console.log('Selected page:', page);
+  const divElement = document.getElementsByClassName("gallary");
+  divElement[0].innerText = '';
+  loadPage(chunkSize, page, false);
+  sessionStorage.setItem('page', page);
+});
+
+function loadPage(chunkSize, page, genIdx){
+let ctx = sessionStorage.getItem('ctx');
+if (ctx==null)
+{
+	window.location.href = 'login.html';
+}
+let aname = sessionStorage.getItem('aname');
+const h2Element = document.getElementById('title_h2');
+h2Element.innerHTML = aname;
+var json = JSON.parse(ctx);
+var result = [];
+ for (var i = 0; i < json.files.length; i += chunkSize) {
+    result.push(json.files.slice(i, i + chunkSize));
+ }
+ if (genIdx){
+ //console.log('result len:', result.length);
+ const selectElement = document.getElementById('page');
+ for (var i = 0; i < result.length; i += 1) {
+  const optElement = document.createElement('option');
+  optElement.text = i+1;
+  optElement.value = i;
+  if (page==i){
+   optElement.selected = true;
+  }
+  selectElement.appendChild(optElement);
+ }
+ }
+loadAll(json.base, result[page], json.pwd);
+}
+
+function loadAll(url_base, urls, passwd) {
+var total = urls.length;
+var cnt = 0;
+const promises = urls.map(url => fetch(url_base+url).then(response => {
+	cnt+=1;
+	var progress = Math.round(100*cnt/total);
+	console.log(progress);
+	const progressBar = document.querySelector('.progress-bar');
+	progressBar.style.width = `${progress}%`;
+    progressBar.setAttribute('aria-valuenow', progress);
+    progressBar.textContent = `${progress}%`;
+	return response.blob();
+	}));
+Promise.all(promises)
+  .then(blobs => {
+    return Promise.all(blobs.map(blob => {
+			readZipFile(blob, passwd).then(([content, fname]) => {
+				const aElement = document.createElement('a');
+				aElement.href = URL.createObjectURL(content);
+				aElement.setAttribute('data-lightbox', 'example-set');
+				aElement.setAttribute('data-title', fname);
+				const imgElement = document.createElement('img');
+				imgElement.src = aElement.href;
+				aElement.appendChild(imgElement);
+				const divElement = document.getElementsByClassName("gallary");
+				divElement[0].appendChild(aElement);
+            }).catch(error => {
+				console.error('Error reading zip file:', error);
+            });
+        }));
+  })
+  .catch(err => console.error('Error processing zips:', err)); 
+}
+
+ async function readZipFile(zipFile, pwd) {
+ zip.configure({
+ useWebWorkers: false,
+ decodeFileName: (bytes) => {
+ return new TextDecoder('utf-8').decode(bytes);}});
+ const zipReader = new zip.ZipReader(new zip.BlobReader(zipFile));
+ const entries = await zipReader.getEntries();
+ const targetEntry = entries.shift();
+ const writer = new zip.BlobWriter();
+ const content = await targetEntry.getData(writer, {password: pwd});
+ await zipReader.close();
+ return [content, targetEntry.filename];
+}
+</script>
+</body>
+</html>

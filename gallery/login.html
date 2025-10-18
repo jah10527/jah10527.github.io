@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录相册</title>
+	<link rel="stylesheet" href="https://cdn.jsdmirror.com/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/style.css">
+	<script type="text/javascript" src="https://cdn.jsdmirror.com/npm/@zip.js/zip.js/dist/zip.min.js"></script>
+</head>
+<body>
+	<h2 id="title_h2" class="bg-info text-center text-warning">请验证</h2><br>
+	<div class="text-center">选择相册:
+    <select id="album" size="1">
+	<option value='251002婚礼相册1'>251002婚礼相册1</option>
+	<option value='23年'>23年</option>
+	<option value='250909登记现场'>250909登记现场</option>
+    </select><br><br>
+    <form id="passwordForm">
+        <label for="password">密码:</label>
+        <input type="password" id="password" name="password"><br><br>
+        <button type="button" onclick="validatePassword()">确定</button>
+    </form>
+	<br>
+    <p id="feedback"></p>
+	</div>
+
+    <script>
+document.addEventListener('keydown', function(event) {
+  if (event.keyCode === 13) {
+    event.preventDefault();
+    return false;
+  }
+});
+function validatePassword() {
+	sessionStorage.clear();
+    const password = document.getElementById('password').value;
+    const feedback = document.getElementById('feedback');
+	const album = document.getElementById('album').value;
+
+    if (password.length < 6) {
+        feedback.textContent = '密码不能少于6个字符';
+        feedback.style.color = 'red';
+        return;
+    } else {
+		fetch(album+'.zip')
+		 .then((response) => response.blob())
+		 .then((blob) => {
+		 readZipFile(blob, password).then(([content, fname]) => {
+				sessionStorage.setItem('ctx', content);
+				sessionStorage.setItem('aname', album);
+				window.location.href = 'viewer.html';
+            }).catch(error => {
+				feedback.textContent = '密码错误';
+				feedback.style.color = 'red';
+            });;
+		 });
+    }
+}
+
+async function readZipFile(zipFile, pwd) {
+ zip.configure({
+ useWebWorkers: false,
+ decodeFileName: (bytes) => {
+ return new TextDecoder('utf-8').decode(bytes);}});
+ const zipReader = new zip.ZipReader(new zip.BlobReader(zipFile));
+ const entries = await zipReader.getEntries();
+ const targetEntry = entries.shift();
+ const writer = new zip.TextWriter();
+ const content = await targetEntry.getData(writer, {password: pwd});
+ await zipReader.close();
+ return [content, targetEntry.filename];
+}
+	</script>
+</body>
+</html>

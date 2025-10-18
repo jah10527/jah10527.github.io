@@ -2,14 +2,14 @@ body{
 	font-family: sans-serif;
 }
 .gallary{
-	margin: 10px 50px;
+	margin: 9px 9px;
 }
 .gallary img{
 	width: 20%;
 	height: 20%;
 	padding: 3px;
 	#filter: grayscale(100%);
-	transition: 1s;
+	transition: 0.6s;
 
 }
 .gallary img:hover{
