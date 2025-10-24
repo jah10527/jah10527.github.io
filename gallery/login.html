@@ -15,24 +15,24 @@
 	<option value='251002婚礼相册1'>251002婚礼相册1</option>
 	<option value='23年'>23年</option>
 	<option value='250909登记现场'>250909登记现场</option>
+	<option value='250823婚纱照'>250823婚纱照</option>
     </select><br><br>
-    <form id="passwordForm">
+    <form id="submitForm">
         <label for="password">密码:</label>
         <input type="password" id="password" name="password"><br><br>
-        <button type="button" onclick="validatePassword()">确定</button>
+        <button type="button" onclick="validate()">确定</button>
     </form>
 	<br>
     <p id="feedback"></p>
 	</div>
 
     <script>
-document.addEventListener('keydown', function(event) {
-  if (event.keyCode === 13) {
-    event.preventDefault();
-    return false;
-  }
+document.getElementById('password').addEventListener('keydown', function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+    }
 });
-function validatePassword() {
+function validate() {
 	sessionStorage.clear();
     const password = document.getElementById('password').value;
     const feedback = document.getElementById('feedback');
@@ -47,6 +47,8 @@ function validatePassword() {
 		 .then((response) => response.blob())
 		 .then((blob) => {
 		 readZipFile(blob, password).then(([content, fname]) => {
+				//feedback.textContent = '正在进入相册';
+				//feedback.style.color = 'green';
 				sessionStorage.setItem('ctx', content);
 				sessionStorage.setItem('aname', album);
 				window.location.href = 'viewer.html';

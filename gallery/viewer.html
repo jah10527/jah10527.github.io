@@ -46,6 +46,31 @@ selectElement.addEventListener('change', function() {
 });
 
 function loadPage(chunkSize, page, genIdx){
+/*fetch('251002hl1.json')
+ .then((response) => response.json())
+ .then((json) => {
+ console.log('file length:', json.files.length);
+ var result = [];
+ for (var i = 0; i < json.files.length; i += chunkSize) {
+    result.push(json.files.slice(i, i + chunkSize));
+ }
+ if (genIdx){
+ console.log('result len:', result.length);
+ const selectElement = document.getElementById('page');
+ for (var i = 0; i < result.length; i += 1) {
+  const optElement = document.createElement('option');
+  optElement.text = i+1;
+  optElement.value = i;
+  if (page==i){
+   optElement.selected = true;
+  }
+  selectElement.appendChild(optElement);
+ }
+ }
+ 
+ loadAll(json.base, result[page], json.pwd);
+ });*/
+ 
 let ctx = sessionStorage.getItem('ctx');
 if (ctx==null)
 {
@@ -72,7 +97,8 @@ var result = [];
   selectElement.appendChild(optElement);
  }
  }
-loadAll(json.base, result[page], json.pwd);
+ const proxyBase = json.base; //'https://gh-proxy.com/https://github.com/jah10527/yun/blob/master/251002hltx/';
+loadAll(proxyBase, result[page], json.pwd);
 }
 
 function loadAll(url_base, urls, passwd) {
@@ -81,7 +107,7 @@ var cnt = 0;
 const promises = urls.map(url => fetch(url_base+url).then(response => {
 	cnt+=1;
 	var progress = Math.round(100*cnt/total);
-	console.log(progress);
+	//console.log(progress);
 	const progressBar = document.querySelector('.progress-bar');
 	progressBar.style.width = `${progress}%`;
     progressBar.setAttribute('aria-valuenow', progress);
